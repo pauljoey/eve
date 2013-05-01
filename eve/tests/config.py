@@ -7,7 +7,7 @@ from eve.flaskapp import Eve
 from eve.io.base import DataLayer
 from eve.tests import TestBase
 from eve.exceptions import ConfigException, SchemaException
-from eve.io.mongo import Mongo, Validator
+from eve.io.mongo import Mongo, Validator, JSONSchemaValidator
 
 
 class TestConfig(TestBase):

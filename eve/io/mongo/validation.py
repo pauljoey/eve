@@ -19,6 +19,64 @@ from flask import current_app as app
 from cerberus import Validator
 from cerberus.errors import ERROR_BAD_TYPE
 
+import jsonschema
+a = """
+schema = simplejson.loads('{"type":"object","additionalProperties" : false, "$schema": "http://json-schema.org/draft-03/schema","id": "http://jsonschema.net","required":false,"properties":{ "address": { "type":"object", "id": "http://jsonschema.net/address", "required":false, "properties":{ "city": { "type":"string", "id": "http://jsonschema.net/address/city", "required":false }, "streetAddress": { "type":"string", "id": "http://jsonschema.net/address/streetAddress", "required":false } } }, "phoneNumber": { "type":"array", "id": "http://jsonschema.net/phoneNumber", "required":false, "items": { "type":"object", "id": "http://jsonschema.net/phoneNumber/0", "required":false, "properties":{ "number": { "type":"string", "id": "http://jsonschema.net/phoneNumber/0/number", "required":false }, "type": { "type":"string", "id": "http://jsonschema.net/phoneNumber/0/type", "required":false } } } } }}')
+
+s2 = simplejson.loads('{	"$schema": "http://json-schema.org/draft-03/schema",	"type": ["object","string"],		"properties": {		"geo": {"$ref": "http://jsonschema.net/examples/C.json"},		"address": {			"type": "object",			"properties": {				"city": {					"type": "string"				},				"streetAddress": {					"type": "string"				}			}		},		"age":{			"type": "number"		}	}}')
+data = simplejson.loads('{	"address2":{		"streetAddress": "21 2nd Street",		"city":"New York"	},	"phoneNumber":	[		{			"type":"home",			"number":"212 555-1234"		}	]}')
+
+jsonschema.validate(data, schema)
+
+jsonschema.Draft3Validator(schema).validate(data)
+"""
+
+class JSONSchemaValidator(jsonschema.Draft3Validator):
+    """ A cerberus.Validator subclass adding the `unique` contraint to
+    Cerberus standard validation.
+
+    :param schema: the validation schema, to be composed according to Cerberus
+                   documentation.
+    :param resource: the resource name.
+
+    """
+    def __init__(self, schema, resource=None):
+        self.resource = resource
+        self.object_id = None
+        self._last_errors = []
+        super(jsonschema.Draft3Validator, self).__init__(schema)
+        #self.check_schema(schema)
+        if resource:
+            self.allow_unknown = config.DOMAIN[resource]['allow_unknown']
+
+    def validate(self, document, object_id):
+        self.object_id = object_id
+        errors = sorted(self.iter_errors(document), key=lambda e: e.path)
+        if 0 < len(errors):
+            self._last_errors = errors
+            return False
+        else:
+            self._last_errors = []
+            return True
+        
+    def errors(self):
+        return self._last_errors
+
+    def validate_update(self, document, object_id):
+        """ Validate method to be invoked when performing an update, not an
+        insert.
+
+        :param document: the document to be validated.
+        :param object_id: the unique id of the document.
+        """
+        self.object_id = object_id
+        return self.validate(document, object_id)
+
+
+
+
+
+
 
 class Validator(Validator):
     """ A cerberus.Validator subclass adding the `unique` contraint to

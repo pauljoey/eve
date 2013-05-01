@@ -12,4 +12,4 @@
 
 # flake8: noqa
 from mongo import Mongo
-from validation import Validator
+from validation import Validator, JSONSchemaValidator

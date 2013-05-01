@@ -201,7 +201,8 @@ class Eve(Flask, Events):
 
             self.validate_roles('allowed_roles', settings, resource)
             self.validate_roles('allowed_item_roles', settings, resource)
-            self.validate_schema(resource, settings['schema'])
+            if not self.config.get('JSON_SCHEMA_STYLE'):
+	            self.validate_schema(resource, settings['schema'])
 
     def validate_roles(self, directive, candidate, resource):
         """ Validates that user role directives are syntactically and formally
@@ -260,7 +261,7 @@ class Eve(Flask, Events):
                                   '(they will be handled automatically).'
                                   % (resource, ', '.join(offenders)))
 
-        for field, ruleset in schema.items():
+        for field, ruleset in schema.items():  # CERBERUS
             if 'data_relation' in ruleset:
                 if 'collection' not in ruleset['data_relation']:
                     raise SchemaException("'collection' key is mandatory for "
@@ -340,19 +341,20 @@ class Eve(Flask, Events):
             # `dates` helper set contains the names of the schema fields
             # defined as `datetime` types. It will come in handy when
             # we will be parsing incoming documents
+            
+            if not self.config.get('JSON_SCHEMA_STYLE'):
+                # TODO support date fields for embedded documents.
+                settings['dates'] = \
+                    set(field for field, definition in schema.items() # CERBERUS
+                        if definition.get('type') == 'datetime')
+    
+                # 'defaults' helper set contains the names of fields with
+                # default values in their schema definition.
 
-            # TODO support date fields for embedded documents.
-            settings['dates'] = \
-                set(field for field, definition in schema.items()
-                    if definition.get('type') == 'datetime')
-
-            # 'defaults' helper set contains the names of fields with
-            # default values in their schema definition.
-
-            # TODO support default values for embedded documents.
-            settings['defaults'] = \
-                set(field for field, definition in schema.items()
-                    if definition.get('default'))
+                # TODO support default values for embedded documents.
+                settings['defaults'] = \
+                    set(field for field, definition in schema.items() # CERBERUS
+                        if definition.get('default'))
 
     def set_schema_defaults(self, schema):
         """ When not provided, fills individual schema settings with default
@@ -364,10 +366,11 @@ class Eve(Flask, Events):
         .. versionadded: 0.0.5
         """
         # TODO fill schema{} defaults, like field type, etc.
-        for field, ruleset in schema.items():
-            if 'data_relation' in ruleset:
-                ruleset['data_relation'].setdefault('field',
-                                                    self.config['ID_FIELD'])
+        if not self.config.get('JSON_SCHEMA_STYLE'):
+            for field, ruleset in schema.items(): # CERBERUS
+                if 'data_relation' in ruleset:
+                    ruleset['data_relation'].setdefault('field',
+                                                        self.config['ID_FIELD'])
 
     def _add_url_rules(self):
         """ Builds the API url map. Methods are enabled for each mapped
