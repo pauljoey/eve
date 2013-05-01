@@ -341,7 +341,10 @@ class Eve(Flask, Events):
             # `dates` helper set contains the names of the schema fields
             # defined as `datetime` types. It will come in handy when
             # we will be parsing incoming documents
-            
+            if self.config.get('JSON_SCHEMA_STYLE'):
+                settings['defaults'] = set()
+                settings['dates'] = set()
+                
             if not self.config.get('JSON_SCHEMA_STYLE'):
                 # TODO support date fields for embedded documents.
                 settings['dates'] = \

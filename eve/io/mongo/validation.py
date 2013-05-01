@@ -46,11 +46,9 @@ class JSONSchemaValidator(jsonschema.Draft3Validator):
         self._last_errors = []
         super(jsonschema.Draft3Validator, self).__init__(schema)
         #self.check_schema(schema)
-        if resource:
-            self.allow_unknown = config.DOMAIN[resource]['allow_unknown']
 
-    def validate(self, document, object_id):
-        self.object_id = object_id
+
+    def validate(self, document):
         errors = sorted(self.iter_errors(document), key=lambda e: e.path)
         if 0 < len(errors):
             self._last_errors = errors
