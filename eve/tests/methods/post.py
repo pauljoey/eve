@@ -138,6 +138,10 @@ class TestPost(TestBase):
         self.assertTrue(db_value[0] == items[2][1])
         self.assertTrue(db_value[1] == items[2][2])
 
+        # items on which validation failed should not be inserted into the db
+        response, status = self.get(self.known_resource_url, "where=prog==7")
+        self.assert404(status)
+
     def test_post_json(self):
         test_field = "ref"
         test_value = "1234567890123456789054321"
@@ -170,6 +174,15 @@ class TestPost(TestBase):
         self.assertValidationError(r, 'item1', "unknown")
         self.app.config['DOMAIN'][self.known_resource]['allow_unknown'] = True
         r, status = self.post(self.known_resource_url, data=data)
+        self.assert200(status)
+        self.assertPostResponse(r, ['item1'])
+
+    def test_post_with_content_type_charset(self):
+        test_field = 'ref'
+        test_value = "1234567890123456789054321"
+        data = {'item1': json.dumps({test_field: test_value})}
+        r, status = self.post(self.known_resource_url, data=data,
+                  content_type='application/json; charset=utf-8')
         self.assert200(status)
         self.assertPostResponse(r, ['item1'])
 

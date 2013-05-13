@@ -46,7 +46,7 @@ def post(resource):
        Support for 'user-restricted resource access'.
 
     .. versionchanged:: 0.0.4
-       Added the ``reqiores_auth`` decorator.
+       Added the ``requires_auth`` decorator.
 
     .. versionchanged:: 0.0.3
        JSON links. Superflous ``response`` container removed.
@@ -93,26 +93,25 @@ def post(resource):
             # the client as if it was a validation issue
             doc_issues.append(str(e))
 
-        #documents.append(document)
-        # TODO so which is faster, a test on len(doc_issues), or extending a
-        # list with a (possibly) empty list? Betting on #2, but a test is in
-        # order
         issues.append(doc_issues)
 
-    # bulk insert
-    ids = app.data.insert(resource, documents)
-    
+        if len(doc_issues) == 0:
+            documents.append(document)
+
+    if len(documents):
+        ids = app.data.insert(resource, documents)
+
     # build response payload
     response = {}
-    for key, document, id_, doc_issues in zip(payl.keys(), documents, ids,
-                                              issues):
+    for key, doc_issues in zip(payl.keys(), issues):
         response_item = {}
         if len(doc_issues):
             response_item['status'] = config.STATUS_ERR
             response_item['issues'] = doc_issues
         else:
             response_item['status'] = config.STATUS_OK
-            response_item[config.ID_FIELD] = id_
+            response_item[config.ID_FIELD] = ids.pop(0)
+            document = documents.pop(0)
             response_item[config.LAST_UPDATED] = document[config.LAST_UPDATED]
             response_item['etag'] = document_etag(document)
             response_item['_links'] = \
