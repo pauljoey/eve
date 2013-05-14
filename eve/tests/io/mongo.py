@@ -4,7 +4,7 @@ from unittest import TestCase
 from bson import ObjectId
 from datetime import datetime
 from eve.io.mongo.parser import parse, ParseError
-from eve.io.mongo import Validator
+from eve.io.mongo import Validator, JSONSchemaValidator
 from cerberus.errors import ERROR_BAD_TYPE
 
 

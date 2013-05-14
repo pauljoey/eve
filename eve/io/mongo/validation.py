@@ -23,11 +23,14 @@ try:
     import jsonschema
 
     class JSONSchemaValidator(jsonschema.Draft3Validator):
-        """ A cerberus.Validator subclass adding the `unique` contraint to
-        Cerberus standard validation.
+        """ A jsonschema.Validator subclass 
+        
+        Requires python-jsonschema https://github.com/Julian/jsonschema
+        
+        TODO: Add support for `unique` constraint
 
-        :param schema: the validation schema, to be composed according to Cerberus
-                       documentation.
+        :param schema: the validation schema, to be composed according to JSON 
+                       Schema Draft 3.
         :param resource: the resource name.
 
         """
@@ -58,12 +61,17 @@ try:
             :param document: the document to be validated.
             :param object_id: the unique id of the document.
             """
+            
+            # TODO Implement
+            
             self.object_id = object_id
             return self.validate(document, object_id)
             
 except ImportError:
-    pass
-
+    class JSONSchemaValidator(object):
+        """ Raise an error"""
+        def __init__(self, *args, **kw):
+            raise NotImplementedError('missing python-jsonschema')
 
 
 
