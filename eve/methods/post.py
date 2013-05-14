@@ -78,10 +78,6 @@ def post(resource):
                     app.config['DOMAIN'][resource]['auth_username_field']
                 if username_field and request.authorization:
                     document[username_field] = request.authorization.username
-                
-                # Seems to be that only validated documents should go for 
-                # insertion.
-                documents.append(document)
 
             else:
                 # validation errors added to list of document issues
@@ -98,6 +94,7 @@ def post(resource):
         if len(doc_issues) == 0:
             documents.append(document)
 
+    # bulk insert
     if len(documents):
         ids = app.data.insert(resource, documents)
 
